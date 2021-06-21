@@ -1,4 +1,4 @@
-package com.catnip.cowboyshoot.ui
+package com.catnip.cowboyshoot.ui.game
 
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -14,9 +14,9 @@ import com.catnip.cowboyshoot.enum.CharacterPosition
 import com.catnip.cowboyshoot.enum.CharacterShootState
 import kotlin.random.Random
 
-class MainActivity : AppCompatActivity() {
+class GameActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val TAG = MainActivity::class.java.simpleName
+    private val TAG = GameActivity::class.java.simpleName
 
     private var posUser: Int = 0
     private var posComp: Int = 0
