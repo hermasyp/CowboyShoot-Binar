@@ -1,10 +1,13 @@
 package com.catnip.cowboyshoot.ui.game
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.catnip.cowboyshoot.R
@@ -18,79 +21,148 @@ class GameActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val TAG = GameActivity::class.java.simpleName
 
-    private var posUser: Int = 0
-    private var posComp: Int = 0
+    private var posPlayerOne: Int = 0
+    private var posPlayerTwo: Int = 0
     private var isGameFinished: Boolean = false
+
+    private var playMode: Int = PLAY_MODE_VS_COMPUTER
+    private var playTurn: CharacterPosition = CharacterPosition.LEFT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
+        getIntentExtras()
         setInitialState()
         setClickEvent()
     }
 
+    private fun getIntentExtras(){
+        playMode = intent.getIntExtra(ARG_EXTRA_PLAY_MODE, PLAY_MODE_VS_COMPUTER)
+    }
+
+    private fun showControllerPlayer(characterPosition: CharacterPosition,isVisible : Boolean){
+        if(characterPosition == CharacterPosition.LEFT){
+            binding.llPlayerLeft.visibility = if(isVisible) View.VISIBLE else View.GONE
+        }else{
+            binding.llPlayerRight.visibility = if(isVisible) View.VISIBLE else View.GONE
+        }
+    }
+
     private fun setInitialState() {
         //set pos user for idle
-        setCharacterMovement(posUser, CharacterPosition.LEFT, CharacterShootState.IDLE)
+        setCharacterMovement(posPlayerOne, CharacterPosition.LEFT, CharacterShootState.IDLE)
         //set pos for computer
-        setCharacterMovement(posComp, CharacterPosition.RIGHT, CharacterShootState.IDLE)
-        //set text for inital start button
-        binding.tvActionGame.text = getString(R.string.text_start_game)
+        setCharacterMovement(posPlayerTwo, CharacterPosition.RIGHT, CharacterShootState.IDLE)
+
+        if(playMode == PLAY_MODE_VS_PLAYER){
+            Toast.makeText(this, "Player 1 Turn", Toast.LENGTH_SHORT).show()
+            showControllerPlayer(CharacterPosition.LEFT,true)
+            showControllerPlayer(CharacterPosition.RIGHT,false)
+            playTurn = CharacterPosition.LEFT
+            //LOCK PLAYER 1
+            binding.tvActionGame.text = getString(R.string.text_lock_player_one)
+        }else{
+            //set text for inital start button
+            binding.tvActionGame.text = getString(R.string.text_start_game)
+        }
     }
 
     private fun setClickEvent() {
         binding.ivArrowTop.setOnClickListener {
-            if (!isGameFinished && posUser < 1) {
-                posUser++
-                Log.d(TAG, "setClickEvent: $posUser")
-                setCharacterMovement(posUser, CharacterPosition.LEFT, CharacterShootState.IDLE)
+            if(playTurn == CharacterPosition.LEFT){
+                //for movement top player one
+                if (!isGameFinished && posPlayerOne < 1) {
+                    posPlayerOne++
+                    Log.d(TAG, "setClickEvent: $posPlayerOne")
+                    setCharacterMovement(posPlayerOne, CharacterPosition.LEFT, CharacterShootState.IDLE)
+                }
+            }else{
+                //for movement top player two
+                if (!isGameFinished && posPlayerTwo < 1) {
+                    posPlayerTwo++
+                    Log.d(TAG, "setClickEvent: $posPlayerTwo")
+                    setCharacterMovement(posPlayerTwo, CharacterPosition.RIGHT, CharacterShootState.IDLE)
+                }
             }
         }
         binding.ivArrowDown.setOnClickListener {
-            if (!isGameFinished && posUser > -1) {
-                posUser--
-                Log.d(TAG, "setClickEvent: $posUser")
-                setCharacterMovement(posUser, CharacterPosition.LEFT, CharacterShootState.IDLE)
+            //for movement bottom player one
+            if(playTurn == CharacterPosition.LEFT){
+                if (!isGameFinished && posPlayerOne > -1) {
+                    posPlayerOne--
+                    Log.d(TAG, "setClickEvent: $posPlayerOne")
+                    setCharacterMovement(posPlayerOne, CharacterPosition.LEFT, CharacterShootState.IDLE)
+                }
+            }else{
+                if (!isGameFinished && posPlayerTwo > -1) {
+                    posPlayerTwo--
+                    Log.d(TAG, "setClickEvent: $posPlayerTwo")
+                    setCharacterMovement(posPlayerTwo, CharacterPosition.RIGHT, CharacterShootState.IDLE)
+                }
             }
         }
         binding.tvActionGame.setOnClickListener {
             if (isGameFinished) {
                 resetGame()
             } else {
-                startGame()
+                //game is not finished, and game is first run
+                if(playMode == PLAY_MODE_VS_PLAYER){
+                    //when player vs player
+                    if(playTurn == CharacterPosition.LEFT){
+                        //set playturn ke kanan
+                        playTurn = CharacterPosition.RIGHT
+                        Toast.makeText(this, "Player 2 Turn", Toast.LENGTH_SHORT).show()
+                        //and show right player and hide left player
+                        showControllerPlayer(CharacterPosition.LEFT,false)
+                        showControllerPlayer(CharacterPosition.RIGHT,true)
+                        //"FIRE !"
+                        binding.tvActionGame.text = getString(R.string.text_fire_player)
+                    }else{
+                        //condition when playturn is RIGHT, game should be played
+                        startGame()
+                    }
+                }else{
+                    //when player vs computer
+                    startGame()
+                }
             }
-
         }
     }
 
     private fun resetGame() {
-        Log.d(TAG, "resetGame: before pos user = {$posUser} pos comp = {$posUser} ")
+        Log.d(TAG, "resetGame: before pos user = {$posPlayerOne} pos comp = {$posPlayerOne} ")
         isGameFinished = false
-        posUser = 0
-        posComp = 0
+        posPlayerOne = 0
+        posPlayerTwo = 0
         binding.tvWinState.text = ""
         setInitialState()
-        Log.d(TAG, "resetGame: after pos user = {$posUser} pos comp = {$posUser} ")
+        Log.d(TAG, "resetGame: after pos user = {$posPlayerOne} pos comp = {$posPlayerOne} ")
     }
 
 
     private fun startGame() {
-        //set random position for computer
-        posComp = Random.nextInt(-1, 2)
+        //show All Controller
+        showControllerPlayer(CharacterPosition.LEFT,true)
+        showControllerPlayer(CharacterPosition.RIGHT,true)
+
+        if (playMode == PLAY_MODE_VS_COMPUTER){
+            //set random position for computer
+            posPlayerTwo = Random.nextInt(-1, 2)
+        }
         //set shoot state user
-        setCharacterMovement(posUser, CharacterPosition.LEFT, CharacterShootState.SHOOT)
+        setCharacterMovement(posPlayerOne, CharacterPosition.LEFT, CharacterShootState.SHOOT)
         //set shoot state for enemy
-        setCharacterMovement(posComp, CharacterPosition.RIGHT, CharacterShootState.SHOOT)
+        setCharacterMovement(posPlayerTwo, CharacterPosition.RIGHT, CharacterShootState.SHOOT)
         //logic for winners
-        if (posUser == posComp) {
+        if (posPlayerOne == posPlayerTwo) {
             //user lose
-            setCharacterMovement(posUser, CharacterPosition.LEFT, CharacterShootState.DEAD)
+            setCharacterMovement(posPlayerOne, CharacterPosition.LEFT, CharacterShootState.DEAD)
             binding.tvWinState.text = getString(R.string.text_user_lose)
         } else {
             //user win
-            setCharacterMovement(posComp, CharacterPosition.RIGHT, CharacterShootState.DEAD)
+            setCharacterMovement(posPlayerTwo, CharacterPosition.RIGHT, CharacterShootState.DEAD)
             binding.tvWinState.text = getString(R.string.text_user_win)
         }
         isGameFinished = true
@@ -152,6 +224,18 @@ class GameActivity : AppCompatActivity() {
                 ivCharBottom.visibility = View.VISIBLE
                 ivCharBottom.setImageDrawable(imgResChar)
             }
+        }
+    }
+
+    companion object {
+        const val ARG_EXTRA_PLAY_MODE = "ARG_EXTRA_PLAY_MODE"
+        const val PLAY_MODE_VS_COMPUTER = 0
+        const val PLAY_MODE_VS_PLAYER = 1
+
+        fun startThisActivity(context: Context?, playMode: Int) {
+            val intent = Intent(context, GameActivity::class.java)
+            intent.putExtra(ARG_EXTRA_PLAY_MODE, playMode)
+            context?.startActivity(intent)
         }
     }
 

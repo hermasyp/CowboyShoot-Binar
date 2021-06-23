@@ -15,7 +15,12 @@ class SplashScreenActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
         supportActionBar?.hide()
+        loadImageSplash()
         setEventSplash()
+    }
+
+    private fun loadImageSplash(){
+        //todo : load image splash
     }
 
     override fun onDestroy() {

@@ -1,5 +1,6 @@
 package com.catnip.cowboyshoot.ui.intro
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,8 @@ import androidx.fragment.app.Fragment
 import com.catnip.cowboyshoot.R
 import com.catnip.cowboyshoot.data.preference.UserPreference
 import com.catnip.cowboyshoot.databinding.FragmentPlayerNameFormBinding
+import com.catnip.cowboyshoot.ui.menu.GameMenuActivity
+import com.google.android.material.snackbar.Snackbar
 
 
 class PlayerNameFormFragment : Fragment() {
@@ -46,13 +49,7 @@ class PlayerNameFormFragment : Fragment() {
             //inform user that username is empty
             isFormValid = false
             //text_error_toast_name_empty = name should be filled !
-            Toast
-                .makeText(
-                    context,
-                    getString(R.string.text_error_toast_name_empty),
-                    Toast.LENGTH_SHORT
-                )
-                .show()
+            Snackbar.make(binding.root, getString(R.string.text_error_toast_name_empty),Snackbar.LENGTH_SHORT).show()
         }
         return isFormValid
     }
@@ -60,8 +57,7 @@ class PlayerNameFormFragment : Fragment() {
     fun navigateToMenuGame(){
         if(isFormFilled()){
             userPreference.userName = binding.etPlayerName.text.toString()
-            //todo : do navigate to menu game activity
-            Toast.makeText(context, "Navigate to Menu Game", Toast.LENGTH_SHORT).show()
+            context?.startActivity(Intent(context,GameMenuActivity::class.java))
         }
     }
 
